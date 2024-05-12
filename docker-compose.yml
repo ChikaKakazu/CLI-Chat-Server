@@ -1,0 +1,17 @@
+version: '3'
+services:
+  server:
+    container_name: server
+    build: .
+    ports:
+      - 8080:8080
+    tty: true
+    volumes:
+      - ./:/go/app
+    networks:
+      - GoDocker
+
+networks:
+  GoDocker:
+    name: GoDocker
+    external: true
