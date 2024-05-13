@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	chatroom "github.com/ChikaKakazu/CLI-Chat-Server/domain/chat_room"
+	chat "github.com/ChikaKakazu/CLI-Chat-Server/domain/chat"
 	"github.com/ChikaKakazu/CLI-Chat-Server/pb"
 	"google.golang.org/grpc"
 )
@@ -17,7 +17,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterChatRoomServiceServer(s, &chatroom.Server{Rooms: make(map[string]bool)})
+	pb.RegisterChatRoomServiceServer(s, &chat.Server{Rooms: make(map[string][]chan *pb.ChatMessage)})
 	if err := s.Serve(lis); err != nil {
 		fmt.Println("Failed to serve: ", err)
 		return
