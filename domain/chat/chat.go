@@ -59,7 +59,7 @@ func (s *Server) Chat(steam pb.ChatRoomService_ChatServer) error {
 	if _, exists := s.Rooms[roomName]; !exists {
 		s.mu.Unlock()
 		fmt.Printf("Room does not exist")
-		return err
+		return fmt.Errorf("room does not exist")
 	}
 
 	ch := make(chan *pb.ChatMessage, 10)
@@ -74,7 +74,6 @@ func (s *Server) Chat(steam pb.ChatRoomService_ChatServer) error {
 			}
 			if err != nil {
 				fmt.Println("Failed to receive a message: ", err)
-				// continue
 				return
 			}
 
