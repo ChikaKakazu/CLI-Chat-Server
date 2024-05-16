@@ -11,8 +11,9 @@ import (
 
 type Server struct {
 	pb.UnimplementedChatRoomServiceServer
-	Rooms map[string][]chan *pb.ChatMessage
-	mu    sync.Mutex
+	Rooms   map[string][]chan *pb.ChatMessage
+	History map[string][]*pb.ChatMessage
+	mu      sync.Mutex
 }
 
 func (s *Server) CreateRoom(ctx context.Context, req *pb.CreateRoomRequest) (*pb.CreateRoomResponse, error) {
@@ -25,6 +26,7 @@ func (s *Server) CreateRoom(ctx context.Context, req *pb.CreateRoomRequest) (*pb
 	}
 
 	s.Rooms[req.RoomName] = make([]chan *pb.ChatMessage, 0)
+	s.History[req.RoomName] = make([]*pb.ChatMessage, 0)
 	return &pb.CreateRoomResponse{
 		Success: true,
 		Message: "Room created",
@@ -64,7 +66,15 @@ func (s *Server) Chat(steam pb.ChatRoomService_ChatServer) error {
 
 	ch := make(chan *pb.ChatMessage, 10)
 	s.Rooms[roomName] = append(s.Rooms[roomName], ch)
+	history := s.History[roomName]
 	s.mu.Unlock()
+
+	for _, m := range history {
+		if err := steam.Send(m); err != nil {
+			fmt.Println("Failed to send a message: ", err)
+			return err
+		}
+	}
 
 	go func() {
 		for {
@@ -78,6 +88,7 @@ func (s *Server) Chat(steam pb.ChatRoomService_ChatServer) error {
 			}
 
 			s.mu.Lock()
+			s.History[roomName] = append(s.History[roomName], in)
 			for _, c := range s.Rooms[roomName] {
 				c <- in
 			}

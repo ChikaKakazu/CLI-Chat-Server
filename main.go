@@ -17,7 +17,10 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterChatRoomServiceServer(s, &chat.Server{Rooms: make(map[string][]chan *pb.ChatMessage)})
+	pb.RegisterChatRoomServiceServer(s, &chat.Server{
+		Rooms:   make(map[string][]chan *pb.ChatMessage),
+		History: make(map[string][]*pb.ChatMessage),
+	})
 	if err := s.Serve(lis); err != nil {
 		fmt.Println("Failed to serve: ", err)
 		return
